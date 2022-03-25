@@ -24,7 +24,7 @@ class Product(models.Model):
     img = models.ImageField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     status = models.BooleanField()
-    create_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
 
 class Cart(models.Model):
@@ -45,7 +45,7 @@ class Order(models.Model):
     id = models.AutoField(primary_key=True)
     address = models.TextField()
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING, default=None)
-    create_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     total = models.FloatField()
     status = models.BooleanField()
 
