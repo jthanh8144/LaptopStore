@@ -41,8 +41,19 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
+    'drf_yasg',
     'core',
 ]
+
+SWAGGER_SETTING = {
+    'SECURITY_DEFINITIONS': {
+        'Auth Token eg [Bearer (JWT)]': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header'
+        }
+    }
+}
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',

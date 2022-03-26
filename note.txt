@@ -8,6 +8,20 @@ python manage.py createsuperuser
 python manage.py makemigrations
 python manage.py migrate
 
+{
+    "username": "thanh",
+    "password": "thanh12345"
+}
+
+{
+    "username": "thanh",
+    "email": "thanh@gmail.com",
+    "firstname": "thanh",
+    "lastname": "le",
+    "password": "thanh12345",
+    "re_password": "thanh12345"
+}
+
 python manage.py shell
     from contact.models import contactForm
     contactForm.objects.all()
@@ -21,8 +35,3 @@ python manage.py shell
     from django.contrib.auth.models import User
     user = User.objects.create_user('thanh', 'thanh@gmail.com', 'thanh')
     user.save()
-
-setting django-html:
-    ctrl + ,
-    find emmet include
-    add

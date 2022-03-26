@@ -20,25 +20,25 @@ class Product(models.Model):
     product_code = models.CharField(max_length=255)
     brand = models.ForeignKey(Brand, on_delete=models.DO_NOTHING, default=None)
     name = models.CharField(max_length=255)
-    price = models.FloatField()
+    price = models.FloatField(default=0)
     img = models.ImageField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
-    status = models.BooleanField()
+    stock = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
 
 class Cart(models.Model):
     id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING, default=None)
-    total = models.FloatField()
-    num = models.IntegerField()
+    total = models.FloatField(default=0)
+    num = models.IntegerField(default=0)
 
 
 class CartDetail(models.Model):
     id = models.AutoField(primary_key=True)
     product = models.ForeignKey(Product, on_delete=models.DO_NOTHING, default=None)
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING, default=None)
-    quantity = models.IntegerField()
+    quantity = models.IntegerField(default=0)
 
 
 class Order(models.Model):
@@ -46,15 +46,15 @@ class Order(models.Model):
     address = models.TextField()
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING, default=None)
     created_at = models.DateTimeField(auto_now_add=True)
-    total = models.FloatField()
-    status = models.BooleanField()
+    total = models.FloatField(default=0)
+    status = models.CharField(max_length=255, blank=True, null=True)
 
 
 class OrderDetail(models.Model):
     id = models.AutoField(primary_key=True)
     order = models.ForeignKey(Order, on_delete=models.DO_NOTHING, default=None)
     product = models.ForeignKey(Product, on_delete=models.DO_NOTHING, default=None)
-    quantity = models.IntegerField()
+    quantity = models.IntegerField(default=0)
 
 
 class Feedback(models.Model):
