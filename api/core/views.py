@@ -59,7 +59,6 @@ def register(request):
                                 404: "{'detail': 'Incorrect authentication credentials.'}"})
 @api_view(['POST'])
 def login(request):
-    # serializer_class = LoginSerializer
     username = request.data.get('username')
     password = request.data.get('password')
     if not User.objects.filter(username=username).exists() or User.objects.filter(email=username).exists():
@@ -85,3 +84,24 @@ def login(request):
 @permission_classes([IsAuthenticated])
 def logout(request):
     return Response()
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def changePassword(request):
+    username = request.user
+    new_password = request.data.get('new_password')
+    rnew_password = request.data.get('rnew_password')
+    user = User.objects.get(username=username)
+    if user.check_password(request.data.get('password')) == False:
+        return Response({'status': 'Incorrect Password'})
+    else:
+        if not new_password == rnew_password:
+            return Response({'status': 'New Password not match'})
+        elif not validpassword(new_password):
+            return Response({'status': 'Password not strong enough'})
+    user.set_password(new_password)
+    user.save()
+    return Response({'status': 'success'})
+
+
