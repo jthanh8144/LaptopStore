@@ -7,7 +7,7 @@ from rest_framework.reverse import reverse
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import *
-# from rest_framework_simplejwt import *
+from rest_framework_simplejwt import *
 from .serializers import *
 from .models import *
 from drf_yasg.utils import swagger_auto_schema
@@ -86,6 +86,11 @@ def logout(request):
     return Response()
 
 
+@swagger_auto_schema(methods=['POST'], request_body=ChangePassSerializer,
+                     responses={200: "{'status': 'success'}",
+                                404: "{'status': 'Incorrect Password'}"
+                                + "\n{'status': 'New Password not match'}"
+                                + "\n{'status': 'Password not strong enough'}"})
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def changePassword(request):
@@ -105,3 +110,56 @@ def changePassword(request):
     return Response({'status': 'success'})
 
 
+@swagger_auto_schema(methods=['POST'], request_body=UpdateUserSerializer,
+                     responses={200: "{'status': 'success'}"})
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def updateUser(request):
+    username = request.user
+    user = request.data
+    User.objects.filter(username=username).update(
+        email=user['email'], first_name=user['first_name'], last_name=user['last_name'])
+    userid = User.objects.get(username=username).id
+    if user['default_address'] != '':
+        Profile.objects.filter(user_id=userid).update(
+            default_address=user['default_address'])
+    if user['ship_address'] != '':
+        Profile.objects.filter(user_id=userid).update(
+            default_address=user['ship_address'])
+    if type(user['img']) == type(''):
+        Profile.objects.filter(user_id=userid).update(img=user['img'])
+    return Response({'status': 'success'})
+
+
+@swagger_auto_schema(methods=['GET'], request_body=None, responses={200: "List of products"})
+@api_view(['GET'])
+def products(request):
+    queryset = Product.objects.all()
+    serializers = ProductSerializer(queryset, many=True, context={
+                                    'request': request}).data
+    return Response(serializers)
+
+
+@swagger_auto_schema(methods=['GET'], request_body=None, responses={200: "Detail of product by code"})
+@api_view(['GET'])
+def detailProduct(request, code):
+    queryset = Product.objects.filter(product_code=code)
+    serializers = ProductSerializer(queryset, many=True, context={
+                                    'request': request}).data[0]
+    return Response(serializers)
+
+
+@swagger_auto_schema(methods=['POST'], request_body=SearchSerializer,
+                     responses={200: "List of products have name like query.",
+                                404: "{'status': 'failed'}"})
+@api_view(['POST'])
+def searchProducts(request):
+    filterdata = "%" + request.data.get('name') + "%"
+    try:
+        queryset = Product.objects.raw(
+            'SELECT * FROM core_product WHERE name LIKE %s', [filterdata])
+        serializers = ProductSerializer(
+            queryset, many=True, context={'request': request})
+        return Response(serializers.data)
+    except:
+        return Response({'status': 'failed'})

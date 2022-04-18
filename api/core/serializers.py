@@ -22,6 +22,38 @@ class LoginSerializer(serializers.ModelSerializer):
         fields = ('username', 'password')
 
 
+class ChangePassSerializer(serializers.Serializer):
+    password = serializers.CharField(max_length=255, min_length=6)
+    new_password = serializers.CharField(max_length=255, min_length=6)
+    rnew_password = serializers.CharField(max_length=255, min_length=6)
+
+
+class UpdateUserSerializer(serializers.Serializer):
+    email = serializers.EmailField(
+        max_length=None, min_length=None, allow_blank=True)
+    firstname = serializers.CharField(max_length=255)
+    lastname = serializers.CharField(max_length=255)
+    img = serializers.ImageField(allow_null=True)
+    default_address = serializers.CharField(
+        max_length=None, min_length=None, allow_null=True)
+    ship_address = serializers.CharField(
+        max_length=None, min_length=None, allow_null=True)
+
+
+class ProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = '__all__'
+
+
+class SearchSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ('name', )
+
+# ______________________________________________________________________
+
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -37,12 +69,6 @@ class ProfileSerializer(serializers.ModelSerializer):
 class BrandSerializer(serializers.ModelSerializer):
     class Meta:
         model = Brand
-        fields = '__all__'
-
-
-class ProductSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Product
         fields = '__all__'
 
 
