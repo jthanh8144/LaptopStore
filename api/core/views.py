@@ -12,6 +12,8 @@ from .serializers import *
 from .models import *
 from drf_yasg.utils import swagger_auto_schema
 
+# User
+
 
 def validpassword(p):
     if len(p) < 6 or not re.search("[a-z]", p) or not re.search("[0-9]", p):
@@ -131,6 +133,9 @@ def updateUser(request):
     return Response({'status': 'success'})
 
 
+# products
+
+
 @swagger_auto_schema(methods=['GET'], request_body=None, responses={200: "List of products"})
 @api_view(['GET'])
 def products(request):
@@ -140,12 +145,30 @@ def products(request):
     return Response(serializers)
 
 
-@swagger_auto_schema(methods=['GET'], request_body=None, responses={200: "Detail of product by code"})
+@swagger_auto_schema(methods=['GET'], request_body=None, responses={200: "List of new products"})
 @api_view(['GET'])
-def detailProduct(request, code):
-    queryset = Product.objects.filter(product_code=code)
+def newProducts(request):
+    queryset = Product.objects.all().order_by('-created_at')[:8]
     serializers = ProductSerializer(queryset, many=True, context={
-                                    'request': request}).data[0]
+                                    'request': request}).data
+    return Response(serializers)
+
+
+@swagger_auto_schema(methods=['GET'], request_body=None, responses={200: "List of instock products"})
+@api_view(['GET'])
+def instockProducts(request):
+    queryset = Product.objects.all().order_by('-stock')[:8]
+    serializers = ProductSerializer(queryset, many=True, context={
+                                    'request': request}).data
+    return Response(serializers)
+
+
+@swagger_auto_schema(methods=['GET'], request_body=None, responses={200: "List of hot products"})
+@api_view(['GET'])
+def hotProducts(request):
+    queryset = Product.objects.exclude(stock=0).order_by('stock')[:8]
+    serializers = ProductSerializer(queryset, many=True, context={
+                                    'request': request}).data
     return Response(serializers)
 
 
@@ -163,3 +186,23 @@ def searchProducts(request):
         return Response(serializers.data)
     except:
         return Response({'status': 'failed'})
+
+
+@swagger_auto_schema(methods=['GET'], request_body=None, responses={200: "Detail of product by code"})
+@api_view(['GET'])
+def detailProduct(request, code):
+    queryset = Product.objects.filter(product_code=code)
+    serializers = ProductSerializer(queryset, many=True, context={
+                                    'request': request}).data[0]
+    return Response(serializers)
+
+
+# brand
+
+
+@api_view(['GET'])
+def brand(request):
+    queryset = Brand.objects.all()
+    serializers = BrandSerializer(queryset, many=True, context={
+                                  'request': request}).data
+    return Response(serializers)
