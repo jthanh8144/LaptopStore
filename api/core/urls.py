@@ -18,5 +18,7 @@ urlpatterns = [
     path('brand/', brand, name='brand'),
     path('feedback/', feedback, name='feedback'),
     path('feedback/send', sendFeedback, name='sendFeedback'),
-
+    path('cart/', cart, name='cart'),
+    path('cart/add', addToCart, name='addToCart'),
+    path('cart/update', updateCart, name='updateToCart'),
 ]

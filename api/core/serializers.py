@@ -88,6 +88,8 @@ class FeedbackSerializer(serializers.ModelSerializer):
         fields = ('title', 'name', 'email', 'phone', 'content')
 
 
+class AddToCartSerializer(serializers.Serializer):
+    product_id = serializers.IntegerField()
 
 # ______________________________________________________________________
 

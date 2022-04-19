@@ -291,6 +291,84 @@ def feedback(request):
     serializers = FeedbackSerializer(queryset, many=True)
     return Response(serializers.data)
 
+
 # cart
+
+
+@swagger_auto_schema(methods=['GET'], request_body=None, responses={200: "List of products in cart"})
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def cart(request):
+    username = request.user
+    userid = User.objects.get(username=username).id
+    queryset = CartDetail.objects.filter(user_id=userid)
+    serializer = CartDetailSerializer(queryset, many=True)
+    return Response(serializer.data)
+
+
+@swagger_auto_schema(methods=['POST'], request_body=AddToCartSerializer,
+                     responses={200: "{'status': 'Add to cart success.'}",
+                                400: "{'status': 'This product is out of stock.'}"})
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def addToCart(request):
+    username = request.user
+    userid = User.objects.get(username=username).id
+    productId = request.data.get('product_id')
+    if Product.objects.get(id=productId).stock < 1:
+        return Response({'status': 'This product is out of stock.'})
+    queryset = Product.objects.filter(id=productId)
+    serializers = ProductSerializer(queryset, many=True, context={
+                                    'request': request}).data[0]
+    price = float(serializers['price'])
+    haveInCart = CartDetail.objects.filter(
+        product_id=productId, user_id=userid)
+    serializers = CartDetailSerializer(haveInCart, many=True).data
+    cart = Cart.objects.get(user_id=userid)
+    if len(serializers) < 1:
+        CartDetail.objects.create(
+            quantity=1, product_id=productId, user_id=userid)
+        Cart.objects.filter(user_id=userid).update(num=cart.num+1)
+    else:
+        newQuantity = CartDetail.objects.get(
+            product_id=productId, user_id=userid).quantity + 1
+        CartDetail.objects.filter(
+            product_id=productId, user_id=userid).update(quantity=newQuantity)
+    cartTotal = cart.total + price
+    Cart.objects.filter(user_id=userid).update(total=cartTotal)
+    return Response({'status': 'Add to cart success.'})
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def updateCart(request):
+    username = request.user
+    userid = User.objects.get(username=username).id
+    productId = request.data.get('product_id')
+    operator = request.data.get('operator')
+    if operator == 'x':
+        CartDetail.objects.filter(
+            product_id=productId, user_id=userid).delete()
+    else:
+        product = Product.objects.get(id=productId)
+        stock = product.stock
+        # price = product.price
+        quantity = CartDetail.objects.get(
+            product_id=productId, user_id=userid).quantity
+        if operator == '+' and quantity < stock:
+            CartDetail.objects.filter(
+                product_id=productId, user_id=userid).update(quantity=quantity+1)
+        if operator == '-' and quantity > 1:
+            CartDetail.objects.filter(
+                product_id=productId, user_id=userid).update(quantity=quantity-1)
+    queryset = CartDetail.objects.filter(user_id=userid)
+    items = CartDetailSerializer(queryset, many=True).data
+    print(len(items))
+    sum = 0
+    for item in items:
+        sum += Product.objects.get(id=item['product']).price * int(item['quantity'])
+    Cart.objects.filter(user_id=userid).update(total=sum, num=len(items))
+    return Response({'status': 'success'})
+
 
 # admin
