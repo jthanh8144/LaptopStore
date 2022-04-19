@@ -133,6 +133,62 @@ def updateUser(request):
     return Response({'status': 'success'})
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def user(request):
+    username = request.user
+    userid = User.objects.get(username=username).id
+    queryset = User.objects.filter(username=username)
+    serializers = UserSerializer(queryset, many=True)
+    user = serializers.data[0]
+    querycart = CartDetail.objects.filter(user_id=userid)
+    numProduct = len(CartDetailSerializer(querycart, many=True).data)
+    user["num"] = numProduct
+    queryset = Cart.objects.filter(user_id=userid)
+    cart = CartSerializer(queryset, many=True).data[0]
+    user["cart"] = cart
+    queryimg = Profile.objects.filter(user_id=userid)
+    try:
+        profile = ProfileSerializer(queryimg, many=True, context={
+                                    'request': request}).data[0]
+    except:
+        Profile.objects.create(user=serializers.data[0])
+        profile = ProfileSerializer(queryimg, many=True, context={
+                                    'request': request}).data[0]
+    user["img"] = profile['img']
+    response = Response()
+    response.data = {
+        'user': user
+    }
+    return response
+
+
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def userOrder(request):
+    if request.method == 'GET':
+        username = request.user
+        userid = User.objects.get(username=username).id
+        queryset = Order.objects.filter(
+            user_id=userid).order_by('-created_at')
+        orders = OrderSerializer(queryset, many=True).data
+        print(orders)
+        if len(orders) < 1:
+            return Response({'status': "You don't have orders."})
+        else:
+            for order in orders:
+                queryset = OrderDetail.objects.filter(
+                    id=order['id'])
+                details = OrderDetailSerializer(queryset, many=True, context={
+                    'request': request}).data
+                order['details'] = details
+            return Response(orders)
+    else:
+        orderid = request.data.get('order_id')
+        Order.objects.filter(id=orderid).update(status='canceled')
+        return Response({'status': 'Your order has been successfully canceled'})
+
+
 # products
 
 
@@ -200,9 +256,41 @@ def detailProduct(request, code):
 # brand
 
 
+@swagger_auto_schema(methods=['GET'], request_body=None, responses={200: "List of brand"})
 @api_view(['GET'])
 def brand(request):
     queryset = Brand.objects.all()
     serializers = BrandSerializer(queryset, many=True, context={
                                   'request': request}).data
     return Response(serializers)
+
+
+# feedback
+
+
+@swagger_auto_schema(methods=['POST'], request_body=FeedbackSerializer,
+                     responses={200: "{'status': 'Your feedback has been noted. Staff will be in touch shortly to respond.'}",
+                                404: "{'status': 'An error occurred while sending data. please try again later'}"})
+@api_view(['POST'])
+def sendFeedback(request):
+    feedback = request.data.get('feedback')
+    print(feedback)
+    try:
+        Feedback.objects.create(title=feedback['title'], name=feedback['name'],
+                                email=feedback['email'], phone=feedback['phone'], content=feedback['content'])
+    except:
+        return Response({'status': 'An error occurred while sending data. please try again later'})
+    return Response({'status': 'Your feedback has been noted. Staff will be in touch shortly to respond.'})
+
+
+@swagger_auto_schema(methods=['GET'], request_body=None, responses={200: "List of feedback"})
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def feedback(request):
+    queryset = Feedback.objects.all().order_by('-id')
+    serializers = FeedbackSerializer(queryset, many=True)
+    return Response(serializers.data)
+
+# cart
+
+# admin

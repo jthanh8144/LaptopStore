@@ -51,20 +51,6 @@ class SearchSerializer(serializers.ModelSerializer):
         model = Product
         fields = ('name', )
 
-# ______________________________________________________________________
-
-
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('username', 'first_name', 'last_name', 'email', 'is_staff')
-
-
-class ProfileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Profile
-        fields = '__all__'
-
 
 class BrandSerializer(serializers.ModelSerializer):
     class Meta:
@@ -99,4 +85,20 @@ class OrderDetailSerializer(serializers.ModelSerializer):
 class FeedbackSerializer(serializers.ModelSerializer):
     class Meta:
         model = Feedback
+        fields = ('title', 'name', 'email', 'phone', 'content')
+
+
+
+# ______________________________________________________________________
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('username', 'first_name', 'last_name', 'email', 'is_staff')
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
         fields = '__all__'
