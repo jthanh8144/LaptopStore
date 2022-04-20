@@ -22,6 +22,6 @@ urlpatterns = [
     path('cart/add', addToCart, name='addToCart'),
     path('cart/update', updateCart, name='updateToCart'),
     path('cart/checkout', checkout, name='checkout'),
-    path('admin/order', orderAdmin, name='orderAdmin'),
-    path('admin/product', productAdmin, name='productAdmin'),
+    # path('admin/order', orderAdmin, name='orderAdmin'),
+    # path('admin/product', productAdmin, name='productAdmin'),
 ]
