@@ -88,12 +88,12 @@ def logout(request):
     return Response()
 
 
-@swagger_auto_schema(methods=['POST'], request_body=ChangePassSerializer,
+@swagger_auto_schema(methods=['PUT'], request_body=ChangePassSerializer,
                      responses={200: "{'status': 'success'}",
                                 404: "{'status': 'Incorrect Password'}"
                                 + "\n{'status': 'New Password not match'}"
                                 + "\n{'status': 'Password not strong enough'}"})
-@api_view(['POST'])
+@api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def changePassword(request):
     username = request.user
@@ -112,9 +112,9 @@ def changePassword(request):
     return Response({'status': 'success'})
 
 
-@swagger_auto_schema(methods=['POST'], request_body=UpdateUserSerializer,
+@swagger_auto_schema(methods=['PUT'], request_body=UpdateUserSerializer,
                      responses={200: "{'status': 'success'}"})
-@api_view(['POST'])
+@api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def updateUser(request):
     username = request.user
@@ -133,6 +133,8 @@ def updateUser(request):
     return Response({'status': 'success'})
 
 
+@swagger_auto_schema(methods=['GET'], request_body=None,
+                     responses={200: "Information of user profile."})
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def user(request):
@@ -163,6 +165,10 @@ def user(request):
     return response
 
 
+@swagger_auto_schema(methods=['GET'], request_body=None,
+                     responses={200: "Information of user profile."})
+@swagger_auto_schema(methods=['POST'], request_body=OrderAdminSerializer,
+                     responses={200: "{'status': 'Your order has been successfully canceled'}"})
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def userOrder(request):
@@ -339,7 +345,9 @@ def addToCart(request):
     return Response({'status': 'Add to cart success.'})
 
 
-@api_view(['POST'])
+@swagger_auto_schema(methods=['PUT'], request_body=UpdateCartSerializer,
+                     responses={200: "{'status': 'success'}"})
+@api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def updateCart(request):
     username = request.user
@@ -366,9 +374,117 @@ def updateCart(request):
     print(len(items))
     sum = 0
     for item in items:
-        sum += Product.objects.get(id=item['product']).price * int(item['quantity'])
+        sum += Product.objects.get(id=item['product']
+                                   ).price * int(item['quantity'])
     Cart.objects.filter(user_id=userid).update(total=sum, num=len(items))
     return Response({'status': 'success'})
 
 
+@swagger_auto_schema(methods=['POST'], request_body=CheckoutSerializer,
+                     responses={200: "{'status': 'pending'}",
+                                400: "{'status': 'Order don't have address'}"})
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def checkout(request):
+    username = request.user
+    userid = User.objects.get(username=username).id
+    profile = Profile.objects.get(user_id=userid)
+    address = request.data.get('address')
+    if not address:
+        if profile.default_address:
+            address = profile.default_address
+    if not address:
+        return Response({'status': "Order don't have address"})
+    total = Cart.objects.get(user_id=userid).total
+    order = Order.objects.create(
+        address=address, total=total, status='pending', user_id=userid)
+    queryset = CartDetail.objects.filter(user_id=userid)
+    items = CartDetailSerializer(queryset, many=True).data
+    for item in items:
+        OrderDetail.objects.create(
+            quantity=item['quantity'], order_id=order.id, product_id=item['product'])
+        product = Product.objects.get(id=item['product'])
+        Product.objects.filter(id=item['product']).update(
+            stock=(product.stock - item['quantity']))
+    CartDetail.objects.filter(user_id=userid).delete()
+    Cart.objects.filter(user_id=userid).update(total=0, num=0)
+    return Response({'status': 'pending'})
+
+
 # admin
+
+
+@swagger_auto_schema(methods=['GET'], request_body=None,
+                     responses={200: "List of orders"})
+@swagger_auto_schema(methods=['POST'], request_body=OrderAdminSerializer,
+                     responses={200: "{'status': 'Change status success'}"})
+@swagger_auto_schema(methods=['DELETE'], request_body=OrderAdminSerializer,
+                     responses={200: "{'status': 'Cancel order success'}"})
+@api_view(['GET', 'POST', 'DELETE'])
+@permission_classes([IsAdminUser])
+def orderAdmin(request):
+    if request.method == 'GET':
+        queryset = Order.objects.all().order_by('-created_at')
+        orders = OrderSerializer(queryset, many=True).data
+        for order in orders:
+            orderid = order['id']
+            user = User.objects.get(id=order['user'])
+            name = user.first_name + ' ' + user.last_name
+            order['fullname'] = name
+            queryset = OrderDetail.objects.filter(order_id=orderid)
+            details = OrderDetailSerializer(queryset, many=True, context={
+                                            'request': request}).data
+            order['details'] = details
+        return Response(orders)
+    elif request.method == 'POST':
+        orderid = request.data.get('order_id')
+        order = Order.objects.get(id=orderid)
+        if order.status == 'pending':
+            order.status = 'confirmed'
+            order.save()
+        elif order.status == 'confirmed':
+            order.status = 'done'
+            order.save()
+        return Response({'status': 'Change status success'})
+    elif request.method == 'DELETE':
+        orderid = request.data.get('order_id')
+        Order.objects.filter(id=orderid).update(status='canceled')
+        return Response({'status': 'Cancel success'})
+
+
+@swagger_auto_schema(methods=['DELETE'], request_body=ProductAdminSerializer,
+                     responses={200: "{'status': 'Delete prodcut success'}"})
+@swagger_auto_schema(methods=['POST'], request_body=ProductSerializer,
+                     responses={200: "{'status': 'Add product success'}",
+                                404: "{'status': 'Productcode or Productname alrealdy exist'}"})
+@swagger_auto_schema(methods=['PUT'], request_body=UpdateProductSerializer,
+                     responses={200: "{'status': 'Update prodcut success'}"})
+@api_view(['POST', 'DELETE', 'PUT'])
+@permission_classes([IsAdminUser])
+def productAdmin(request):
+    if request.method == 'DELETE':
+        productid = request.data.get('product_id')
+        Product.objects.filter(id=productid).delete()
+        return Response({'status': 'Delete product success'})
+    else:
+        productcode = request.data.get('product_code')
+        brandid = request.data.get('brand_id')
+        name = request.data.get('name')
+        price = request.data.get('price')
+        img = request.data.get('img')
+        description = request.data.get('description')
+        stock = request.data.get('stock')
+        brand = Brand.objects.get(id=brandid)
+        if request.method == 'POST':
+            if (Product.objects.filter(product_code=productcode).exists()) == False and (Product.objects.filter(name=name).exists()) == False:
+                Product.objects.create(product_code=productcode, name=name, price=price,
+                                       description=description, img=img, brand_id=brandid, stock=stock)
+                return Response({'status': 'Add product success'})
+            else:
+                return Response({'status': 'Productcode or Productname alrealdy exist'})
+        if request.method == 'PUT':
+            productid = request.data.get('id')
+            Product.objects.filter(id=productid).delete()
+            Product.objects.create(id=productid, product_code=productcode, brand_id=brand.id,
+                                   name=name, price=price, img=img, description=description, stock=stock)
+            return Response({'status': 'Update product success'})

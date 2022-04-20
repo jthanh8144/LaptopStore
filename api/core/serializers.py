@@ -91,7 +91,31 @@ class FeedbackSerializer(serializers.ModelSerializer):
 class AddToCartSerializer(serializers.Serializer):
     product_id = serializers.IntegerField()
 
-# ______________________________________________________________________
+
+class UpdateCartSerializer(serializers.Serializer):
+    product_id = serializers.IntegerField()
+    operator = serializers.CharField(max_length=1)
+
+
+class CheckoutSerializer(serializers.Serializer):
+    address = serializers.CharField(
+        max_length=None, min_length=None, allow_null=True, required=False)
+
+
+class OrderAdminSerializer(serializers.Serializer):
+    order_id = serializers.IntegerField()
+
+
+class ProductAdminSerializer(serializers.Serializer):
+    product_id = serializers.IntegerField()
+
+
+class UpdateProductSerializer(serializers.ModelSerializer):
+    product_id = serializers.IntegerField()
+
+    class Meta:
+        model = Product
+        fields = '__all__'
 
 
 class UserSerializer(serializers.ModelSerializer):
