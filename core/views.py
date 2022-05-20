@@ -280,7 +280,6 @@ def brand(request):
 @api_view(['POST'])
 def sendFeedback(request):
     feedback = request.data.get('feedback')
-    print(feedback)
     try:
         Feedback.objects.create(title=feedback['title'], name=feedback['name'],
                                 email=feedback['email'], phone=feedback['phone'], content=feedback['content'])
