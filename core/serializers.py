@@ -31,8 +31,8 @@ class ChangePassSerializer(serializers.Serializer):
 class UpdateUserSerializer(serializers.Serializer):
     email = serializers.EmailField(
         max_length=None, min_length=None, allow_blank=True)
-    firstname = serializers.CharField(max_length=255)
-    lastname = serializers.CharField(max_length=255)
+    first_name = serializers.CharField(max_length=255)
+    last_name = serializers.CharField(max_length=255)
     img = serializers.ImageField(allow_null=True)
     default_address = serializers.CharField(
         max_length=None, min_length=None, allow_null=True)

@@ -15,6 +15,7 @@ urlpatterns = [
     path('products/instock/', instockProducts, name='instockProduct'),
     path('products/hot/', hotProducts, name='hotProduct'),
     path('products/<str:code>/', detailProduct, name='detailProduct'),
+    path('products/id/<str:id>/', detailProductById, name='detailProduct'),
     path('brand/', brand, name='brand'),
     path('feedback/', feedback, name='feedback'),
     path('feedback/send/', sendFeedback, name='sendFeedback'),

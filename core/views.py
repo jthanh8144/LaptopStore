@@ -258,6 +258,14 @@ def detailProduct(request, code):
                                     'request': request}).data[0]
     return Response(serializers)
 
+@swagger_auto_schema(methods=['GET'], request_body=None, responses={200: "Detail of product by id"})
+@api_view(['GET'])
+def detailProductById(request, id):
+    queryset = Product.objects.filter(id=id)
+    serializers = ProductSerializer(queryset, many=True, context={
+                                    'request': request}).data[0]
+    return Response(serializers)
+
 
 # brand
 
@@ -279,10 +287,17 @@ def brand(request):
                                 404: "{'status': 'An error occurred while sending data. please try again later'}"})
 @api_view(['POST'])
 def sendFeedback(request):
-    feedback = request.data.get('feedback')
+    # feedback = request.data.get('feedback')
+    title = request.data.get('title')
+    name = request.data.get('name')
+    email = request.data.get('email')
+    phone = request.data.get('phone')
+    content = request.data.get('content')
     try:
-        Feedback.objects.create(title=feedback['title'], name=feedback['name'],
-                                email=feedback['email'], phone=feedback['phone'], content=feedback['content'])
+        # Feedback.objects.create(title=feedback['title'], name=feedback['name'],
+        #                         email=feedback['email'], phone=feedback['phone'], content=feedback['content'])
+        Feedback.objects.create(title=title, name=name,
+                                email=email, phone=phone, content=content)
     except:
         return Response({'status': 'An error occurred while sending data. please try again later'})
     return Response({'status': 'Your feedback has been noted. Staff will be in touch shortly to respond.'})
