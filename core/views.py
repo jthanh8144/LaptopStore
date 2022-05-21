@@ -497,7 +497,7 @@ def productAdmin(request):
             else:
                 return Response({'status': 'Productcode or Productname alrealdy exist'})
         if request.method == 'PUT':
-            productid = request.data.get('id')
+            productid = request.data.get('product_id')
             Product.objects.filter(id=productid).delete()
             Product.objects.create(id=productid, product_code=productcode, brand_id=brand.id,
                                    name=name, price=price, img=img, description=description, stock=stock)
