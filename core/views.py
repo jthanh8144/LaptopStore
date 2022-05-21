@@ -178,13 +178,12 @@ def userOrder(request):
         queryset = Order.objects.filter(
             user_id=userid).order_by('-created_at')
         orders = OrderSerializer(queryset, many=True).data
-        print(orders)
         if len(orders) < 1:
             return Response({'status': "You don't have orders."})
         else:
             for order in orders:
                 queryset = OrderDetail.objects.filter(
-                    id=order['id'])
+                    order_id=order['id'])
                 details = OrderDetailSerializer(queryset, many=True, context={
                     'request': request}).data
                 order['details'] = details
