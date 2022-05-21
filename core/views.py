@@ -315,15 +315,16 @@ def feedback(request):
 # cart
 
 
-@swagger_auto_schema(methods=['GET'], request_body=None, responses={200: "List of products in cart"})
+@swagger_auto_schema(methods=['GET'], request_body=None, responses={200: "List of products in cart, cart total and cart num"})
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def cart(request):
     username = request.user
     userid = User.objects.get(username=username).id
+    cart = Cart.objects.get(user_id=userid)
     queryset = CartDetail.objects.filter(user_id=userid)
     serializer = CartDetailSerializer(queryset, many=True)
-    return Response(serializer.data)
+    return Response({ "products": serializer.data, "total": cart.total, "num": cart.num})
 
 
 @swagger_auto_schema(methods=['POST'], request_body=AddToCartSerializer,
