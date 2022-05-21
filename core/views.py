@@ -413,7 +413,7 @@ def checkout(request):
     total = Cart.objects.get(user_id=userid).total
     order = Order.objects.create(
         address=address, total=total, status='pending', user_id=userid)
-    queryset = CartDetail.objects.filter(user_id=userid)
+    queryset = CartDetail.objects.filter(user=userid)
     items = CartDetailSerializer(queryset, many=True).data
     for item in items:
         OrderDetail.objects.create(
@@ -421,8 +421,8 @@ def checkout(request):
         product = Product.objects.get(id=item['product'])
         Product.objects.filter(id=item['product']).update(
             stock=(product.stock - item['quantity']))
-    CartDetail.objects.filter(user_id=userid).delete()
-    Cart.objects.filter(user_id=userid).update(total=0, num=0)
+    CartDetail.objects.filter(user=userid).delete()
+    Cart.objects.filter(user=userid).update(total=0, num=0)
     return Response({'status': 'pending'})
 
 
