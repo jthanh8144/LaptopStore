@@ -85,7 +85,7 @@ class OrderDetailSerializer(serializers.ModelSerializer):
 class FeedbackSerializer(serializers.ModelSerializer):
     class Meta:
         model = Feedback
-        fields = ('title', 'name', 'email', 'phone', 'content')
+        fields = '__all__'
 
 
 class AddToCartSerializer(serializers.Serializer):

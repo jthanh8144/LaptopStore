@@ -472,7 +472,7 @@ def orderAdmin(request):
                      responses={200: "{'status': 'Add product success'}",
                                 404: "{'status': 'Productcode or Productname alrealdy exist'}"})
 @swagger_auto_schema(methods=['PUT'], request_body=UpdateProductSerializer,
-                     responses={200: "{'status': 'Update prodcut success'}"})
+                     responses={200: "{'status': 'Update product success'}"})
 @api_view(['POST', 'DELETE', 'PUT'])
 @permission_classes([IsAdminUser])
 def productAdmin(request):
