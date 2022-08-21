@@ -139,17 +139,21 @@ def updateUser(request):
 @permission_classes([IsAuthenticated])
 def user(request):
     username = request.user
-    userid = User.objects.get(username=username).id
+    user = User.objects.get(username=username)
     queryset = User.objects.filter(username=username)
     serializers = UserSerializer(queryset, many=True)
-    user = serializers.data[0]
-    querycart = CartDetail.objects.filter(user_id=userid)
+    data = serializers.data[0]
+    querycart = CartDetail.objects.filter(user_id=user.id)
     numProduct = len(CartDetailSerializer(querycart, many=True).data)
-    user["num"] = numProduct
-    queryset = Cart.objects.filter(user_id=userid)
+    data["num"] = numProduct
+    queryset = Cart.objects.filter(user_id=user.id)
+    if len(CartSerializer(queryset, many=True).data) == 0:
+        Cart.objects.create(user=user)
+        Profile.objects.create(user=user)
+    queryset = Cart.objects.filter(user_id=user.id)
     cart = CartSerializer(queryset, many=True).data[0]
-    user["cart"] = cart
-    queryimg = Profile.objects.filter(user_id=userid)
+    data["cart"] = cart
+    queryimg = Profile.objects.filter(user_id=user.id)
     try:
         profile = ProfileSerializer(queryimg, many=True, context={
                                     'request': request}).data[0]
@@ -157,10 +161,10 @@ def user(request):
         Profile.objects.create(user=serializers.data[0])
         profile = ProfileSerializer(queryimg, many=True, context={
                                     'request': request}).data[0]
-    user["img"] = profile['img']
+    data["img"] = profile['img']
     response = Response()
     response.data = {
-        'user': user
+        'user': data
     }
     return response
 
