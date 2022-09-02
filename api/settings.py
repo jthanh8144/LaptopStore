@@ -13,7 +13,6 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 import os
 import json
 from pathlib import Path
-import django_on_heroku
 from corsheaders.defaults import default_headers
 from datetime import timedelta
 
@@ -31,7 +30,7 @@ SECRET_KEY = 'django-insecure-u)2nvbohsc!*5!&_!5hu-cglz5s=gc@)oeyj$a!k-^t4#z6(!$
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'laptopstoreapi-jthanh8144.herokuapp.com']
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -209,5 +208,3 @@ CORS_ALLOW_HEADERS = default_headers + (
 )
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
-django_on_heroku.settings(locals())

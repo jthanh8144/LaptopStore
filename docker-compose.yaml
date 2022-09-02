@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  laptopstore:
+    build: 
+      dockerfile: Dockerfile
+      context: .
+      args:
+        NODE_IMAGE: ${PYTHON_IMAGE}
+        APP_PORT: ${APP_PORT}
+    container_name: laptopstore
+    env_file:
+      - .env
+    ports:
+      - 8000:${APP_PORT}
+    restart: always
+    volumes:
+      - .:/home/app
