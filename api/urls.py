@@ -40,6 +40,8 @@ schema_view = get_schema_view(
     ),
     public=True,
     permission_classes=[permissions.AllowAny],
+    # enable this to deploy have https
+    # url='https://laptopstoreapi.jthanh8144.tk/',
 )
 
 urlpatterns = [
