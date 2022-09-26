@@ -51,7 +51,10 @@ INSTALLED_APPS = [
 
 SWAGGER_SETTING = {
     'SECURITY_DEFINITIONS': {
-        'Auth Token eg [Bearer (JWT)]': {
+        'Basic': {
+            'type': 'basic'
+        },
+        'Bearer': {
             'type': 'apiKey',
             'name': 'Authorization',
             'in': 'header'

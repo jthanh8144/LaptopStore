@@ -46,12 +46,6 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class SearchSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Product
-        fields = ('name', )
-
-
 class BrandSerializer(serializers.ModelSerializer):
     class Meta:
         model = Brand

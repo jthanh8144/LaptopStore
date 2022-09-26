@@ -11,6 +11,7 @@ from rest_framework_simplejwt import *
 from .serializers import *
 from .models import *
 from drf_yasg.utils import swagger_auto_schema
+from drf_yasg.openapi import Parameter, IN_QUERY
 
 # User
 
@@ -23,7 +24,7 @@ def validpassword(p):
 
 @swagger_auto_schema(methods=['POST'], request_body=RegisterSerializer,
                      responses={200: "{'status': 'register success'}",
-                                404: "{'status': 'You must enter all fields'}"
+                                400: "{'status': 'You must enter all fields'}"
                                 + "\n{'status': 'User alrealdy exist'}"
                                 + "\n{'status': 'Password contains at least 6 characters. It must contain letters and numbers.'}"
                                 + "\n{'status': 'Password not match'}"})
@@ -58,7 +59,7 @@ def register(request):
 
 @swagger_auto_schema(methods=['POST'], request_body=LoginSerializer,
                      responses={200: "{'access': token,\n'refresh': token,\n'username': username,\n'status': 'Login success'}",
-                                404: "{'detail': 'Incorrect authentication credentials.'}"})
+                                400: "{'detail': 'Incorrect authentication credentials.'}"})
 @api_view(['POST'])
 def login(request):
     username = request.data.get('username')
@@ -90,7 +91,7 @@ def logout(request):
 
 @swagger_auto_schema(methods=['PUT'], request_body=ChangePassSerializer,
                      responses={200: "{'status': 'success'}",
-                                404: "{'status': 'Incorrect Password'}"
+                                400: "{'status': 'Incorrect Password'}"
                                 + "\n{'status': 'New Password not match'}"
                                 + "\n{'status': 'Password not strong enough'}"})
 @api_view(['PUT'])
@@ -201,12 +202,39 @@ def userOrder(request):
 # products
 
 
-@swagger_auto_schema(methods=['GET'], request_body=None, responses={200: "List of products"})
+@swagger_auto_schema(
+    methods=['GET'],
+    request_body=None,
+    manual_parameters=[
+        Parameter('q', IN_QUERY, 'search products by name', type='string'),
+        Parameter('id', IN_QUERY, 'get a product by id', type='string')
+    ],
+    responses={
+        200: "All products or search products by name or get product by id",
+        400: "{'status': 'failed'}"
+    })
 @api_view(['GET'])
 def products(request):
-    queryset = Product.objects.all()
-    serializers = ProductSerializer(queryset, many=True, context={
-                                    'request': request}).data
+    query = request.GET.get('q', None)
+    id = request.GET.get('id', None)
+    if query:
+        filterdata = "%" + query + "%"
+        try:
+            queryset = Product.objects.raw(
+                'SELECT * FROM core_product WHERE UPPER(name) LIKE UPPER(%s)', [filterdata])
+            serializers = ProductSerializer(
+                queryset, many=True, context={'request': request})
+            return Response(serializers.data)
+        except:
+            return Response({'status': 'failed'})
+    elif id:
+        queryset = Product.objects.filter(id=id)
+        serializers = ProductSerializer(queryset, many=True, context={
+                                        'request': request}).data[0]
+    else:
+        queryset = Product.objects.all()
+        serializers = ProductSerializer(queryset, many=True, context={
+                                        'request': request}).data
     return Response(serializers)
 
 
@@ -237,22 +265,6 @@ def hotProducts(request):
     return Response(serializers)
 
 
-@swagger_auto_schema(methods=['POST'], request_body=SearchSerializer,
-                     responses={200: "List of products have name like query.",
-                                404: "{'status': 'failed'}"})
-@api_view(['POST'])
-def searchProducts(request):
-    filterdata = "%" + request.data.get('name') + "%"
-    try:
-        queryset = Product.objects.raw(
-            'SELECT * FROM core_product WHERE name LIKE %s', [filterdata])
-        serializers = ProductSerializer(
-            queryset, many=True, context={'request': request})
-        return Response(serializers.data)
-    except:
-        return Response({'status': 'failed'})
-
-
 @swagger_auto_schema(methods=['GET'], request_body=None, responses={200: "Detail of product by code"})
 @api_view(['GET'])
 def detailProduct(request, code):
@@ -261,19 +273,11 @@ def detailProduct(request, code):
                                     'request': request}).data[0]
     return Response(serializers)
 
-@swagger_auto_schema(methods=['GET'], request_body=None, responses={200: "Detail of product by id"})
-@api_view(['GET'])
-def detailProductById(request, id):
-    queryset = Product.objects.filter(id=id)
-    serializers = ProductSerializer(queryset, many=True, context={
-                                    'request': request}).data[0]
-    return Response(serializers)
-
 
 # brand
 
 
-@swagger_auto_schema(methods=['GET'], request_body=None, responses={200: "List of brand"})
+@swagger_auto_schema(methods=['GET'], request_body=None, responses={200: "List brands"})
 @api_view(['GET'])
 def brand(request):
     queryset = Brand.objects.all()
@@ -282,37 +286,34 @@ def brand(request):
     return Response(serializers)
 
 
+@swagger_auto_schema(methods=['GET'], request_body=None, responses={200: "List products of brand"})
+@api_view(['GET'])
+def productsOfBrand(request, id):
+    queryset = Product.objects.filter(brand_id=id)
+    serializers = ProductSerializer(queryset, many=True, context={
+                                    'request': request}).data
+    return Response(serializers)
+
+
 # feedback
 
 
 @swagger_auto_schema(methods=['POST'], request_body=FeedbackSerializer,
                      responses={200: "{'status': 'Your feedback has been noted. Staff will be in touch shortly to respond.'}",
-                                404: "{'status': 'An error occurred while sending data. please try again later'}"})
+                                400: "{'status': 'An error occurred while sending data. please try again later'}"})
 @api_view(['POST'])
 def sendFeedback(request):
-    # feedback = request.data.get('feedback')
     title = request.data.get('title')
     name = request.data.get('name')
     email = request.data.get('email')
     phone = request.data.get('phone')
     content = request.data.get('content')
     try:
-        # Feedback.objects.create(title=feedback['title'], name=feedback['name'],
-        #                         email=feedback['email'], phone=feedback['phone'], content=feedback['content'])
         Feedback.objects.create(title=title, name=name,
                                 email=email, phone=phone, content=content)
     except:
         return Response({'status': 'An error occurred while sending data. please try again later'})
     return Response({'status': 'Your feedback has been noted. Staff will be in touch shortly to respond.'})
-
-
-@swagger_auto_schema(methods=['GET'], request_body=None, responses={200: "List of feedback"})
-@api_view(['GET'])
-@permission_classes([IsAdminUser])
-def feedback(request):
-    queryset = Feedback.objects.all().order_by('-id')
-    serializers = FeedbackSerializer(queryset, many=True)
-    return Response(serializers.data)
 
 
 # cart
@@ -327,7 +328,7 @@ def cart(request):
     cart = Cart.objects.get(user_id=userid)
     queryset = CartDetail.objects.filter(user_id=userid)
     serializer = CartDetailSerializer(queryset, many=True)
-    return Response({ "products": serializer.data, "total": cart.total, "num": cart.num})
+    return Response({"products": serializer.data, "total": cart.total, "num": cart.num})
 
 
 @swagger_auto_schema(methods=['POST'], request_body=AddToCartSerializer,
@@ -474,7 +475,7 @@ def orderAdmin(request):
                      responses={200: "{'status': 'Delete prodcut success'}"})
 @swagger_auto_schema(methods=['POST'], request_body=ProductSerializer,
                      responses={200: "{'status': 'Add product success'}",
-                                404: "{'status': 'Productcode or Productname alrealdy exist'}"})
+                                400: "{'status': 'Productcode or Productname alrealdy exist'}"})
 @swagger_auto_schema(methods=['PUT'], request_body=UpdateProductSerializer,
                      responses={200: "{'status': 'Update product success'}"})
 @api_view(['POST', 'DELETE', 'PUT'])
@@ -506,3 +507,12 @@ def productAdmin(request):
             Product.objects.create(id=productid, product_code=productcode, brand_id=brand.id,
                                    name=name, price=price, img=img, description=description, stock=stock)
             return Response({'status': 'Update product success'})
+
+
+@swagger_auto_schema(methods=['GET'], request_body=None, responses={200: "List of feedback"})
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def getAllFeedback(request):
+    queryset = Feedback.objects.all().order_by('-id')
+    serializers = FeedbackSerializer(queryset, many=True)
+    return Response(serializers.data)
