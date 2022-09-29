@@ -3,6 +3,8 @@ import requests
 from django.shortcuts import render
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
+from django.views.decorators.csrf import ensure_csrf_cookie, csrf_protect
+from django.middleware.csrf import get_token
 from rest_framework.reverse import reverse
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
@@ -12,6 +14,14 @@ from .serializers import *
 from .models import *
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg.openapi import Parameter, IN_QUERY
+
+# CSRF Token
+
+
+@api_view(['GET'])
+def csrfToken(request):
+    return Response({'token': get_token(request)})
+
 
 # User
 
@@ -28,6 +38,7 @@ def validpassword(p):
                                 + "\n{'status': 'User alrealdy exist'}"
                                 + "\n{'status': 'Password contains at least 6 characters. It must contain letters and numbers.'}"
                                 + "\n{'status': 'Password not match'}"})
+@csrf_protect
 @api_view(['POST'])
 def register(request):
     user = request.data
@@ -60,6 +71,7 @@ def register(request):
 @swagger_auto_schema(methods=['POST'], request_body=LoginSerializer,
                      responses={200: "{'access': token,\n'refresh': token,\n'username': username,\n'status': 'Login success'}",
                                 400: "{'detail': 'Incorrect authentication credentials.'}"})
+@csrf_protect
 @api_view(['POST'])
 def login(request):
     username = request.data.get('username')
@@ -83,6 +95,7 @@ def login(request):
     return response
 
 
+@csrf_protect
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def logout(request):
@@ -94,6 +107,7 @@ def logout(request):
                                 400: "{'status': 'Incorrect Password'}"
                                 + "\n{'status': 'New Password not match'}"
                                 + "\n{'status': 'Password not strong enough'}"})
+@csrf_protect
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def changePassword(request):
@@ -115,6 +129,7 @@ def changePassword(request):
 
 @swagger_auto_schema(methods=['PUT'], request_body=UpdateUserSerializer,
                      responses={200: "{'status': 'success'}"})
+@csrf_protect
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def updateUser(request):
@@ -174,6 +189,7 @@ def user(request):
                      responses={200: "Information of user profile."})
 @swagger_auto_schema(methods=['POST'], request_body=OrderAdminSerializer,
                      responses={200: "{'status': 'Your order has been successfully canceled'}"})
+@csrf_protect
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def userOrder(request):
@@ -301,6 +317,7 @@ def productsOfBrand(request, id):
 @swagger_auto_schema(methods=['POST'], request_body=FeedbackSerializer,
                      responses={200: "{'status': 'Your feedback has been noted. Staff will be in touch shortly to respond.'}",
                                 400: "{'status': 'An error occurred while sending data. please try again later'}"})
+@csrf_protect
 @api_view(['POST'])
 def sendFeedback(request):
     title = request.data.get('title')
@@ -334,6 +351,7 @@ def cart(request):
 @swagger_auto_schema(methods=['POST'], request_body=AddToCartSerializer,
                      responses={200: "{'status': 'Add to cart success.'}",
                                 400: "{'status': 'This product is out of stock.'}"})
+@csrf_protect
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def addToCart(request):
@@ -366,6 +384,7 @@ def addToCart(request):
 
 @swagger_auto_schema(methods=['PUT'], request_body=UpdateCartSerializer,
                      responses={200: "{'status': 'success'}"})
+@csrf_protect
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def updateCart(request):
@@ -402,6 +421,7 @@ def updateCart(request):
 @swagger_auto_schema(methods=['POST'], request_body=CheckoutSerializer,
                      responses={200: "{'status': 'pending'}",
                                 400: "{'status': 'Order don't have address'}"})
+@csrf_protect
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def checkout(request):
@@ -439,6 +459,7 @@ def checkout(request):
                      responses={200: "{'status': 'Change status success'}"})
 @swagger_auto_schema(methods=['DELETE'], request_body=OrderAdminSerializer,
                      responses={200: "{'status': 'Cancel order success'}"})
+@csrf_protect
 @api_view(['GET', 'POST', 'DELETE'])
 @permission_classes([IsAdminUser])
 def orderAdmin(request):
@@ -478,6 +499,7 @@ def orderAdmin(request):
                                 400: "{'status': 'Productcode or Productname alrealdy exist'}"})
 @swagger_auto_schema(methods=['PUT'], request_body=UpdateProductSerializer,
                      responses={200: "{'status': 'Update product success'}"})
+@csrf_protect
 @api_view(['POST', 'DELETE', 'PUT'])
 @permission_classes([IsAdminUser])
 def productAdmin(request):

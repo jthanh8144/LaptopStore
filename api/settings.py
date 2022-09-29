@@ -210,4 +210,7 @@ CORS_ALLOW_HEADERS = default_headers + (
     '*',
 )
 
+CSRF_TRUSTED_ORIGINS = ['http://localhost:3001']
+CSRF_COOKIE_SECURE = True
+
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
