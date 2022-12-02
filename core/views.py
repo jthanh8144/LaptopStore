@@ -27,7 +27,8 @@ def csrfToken(request):
 
 
 def validpassword(p):
-    if len(p) < 6 or not re.search("[a-z]", p) or not re.search("[0-9]", p):
+    special_character = '~`!@#$%^&*()-_+={[]}|:;"<>,.?'
+    if len(p) < 8 or not re.search("[a-z]", p) or not re.search("[A-Z]", p) or not re.search("[0-9]", p) or not any(char in special_character for char in p):
         return False
     return True
 
@@ -55,7 +56,7 @@ def register(request):
     elif User.objects.filter(email=email).exists():
         return Response({'status': 'Email alrealdy exist'})
     elif validpassword(password) == False:
-        return Response({'status': 'Password contains at least 6 characters. It must contain letters and numbers.'})
+        return Response({'status': 'Password contains at least 8 characters. It must contain uppercase, lowercase letters, numbers and special characters.'})
     elif rpassword != password:
         return Response({'status': 'Password not match'})
     else:
