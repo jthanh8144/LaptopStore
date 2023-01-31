@@ -1,4 +1,4 @@
-ARG PYTHON_IMAGE=python:3.10.6-slim-bullseye
+ARG PYTHON_IMAGE=python:3.10.9-alpine
 ARG APP_PORT=8000
 
 # =====================================
@@ -7,15 +7,9 @@ FROM ${PYTHON_IMAGE}
 
 WORKDIR /home/app
 
-# RUN apt-get update \
-#     && apt-get -y install libpq-dev gcc
-
-RUN apt-get update && apt-get install -y \
-    python-dev python-setuptools \
-    libtiff-dev libxml2-dev libxslt1-dev \
-    libjpeg62-turbo-dev zlib1g-dev libfreetype6-dev \
-    liblcms2-dev libwebp-dev python-tk \
-    libpq-dev gcc
+RUN apk update \
+    && apk add --virtual build-deps gcc python3-dev musl-dev \
+    && apk add libpq-dev jpeg-dev zlib-dev libjpeg
 
 COPY requirements.txt requirements.txt
 
