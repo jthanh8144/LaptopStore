@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
       context: .
       args:
-        NODE_IMAGE: ${PYTHON_IMAGE}
+        PYTHON_IMAGE: ${PYTHON_IMAGE}
         APP_PORT: ${APP_PORT}
     container_name: laptopstore
     env_file:
@@ -16,3 +16,10 @@ services:
     restart: always
     volumes:
       - .:/home/app
+#     networks:
+#       - hana
+
+# networks:
+#   hana:
+#     name: hana
+#     external: true
