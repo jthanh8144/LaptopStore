@@ -34,14 +34,14 @@ schema_view = get_schema_view(
         title="Laptop store API",
         default_version='v1',
         description="API for laptop store",
-        terms_of_service="https://jthanh8144.cf",
+        terms_of_service="https://jthanh8144.click",
         contact=openapi.Contact(email="thanhvo618@gmail.com"),
         license=openapi.License(name="jthanh8144"),
     ),
     public=True,
     permission_classes=[permissions.AllowAny],
     # enable this to deploy have https
-    # url='https://laptopstoreapi.jthanh8144.tk/',
+    url='https://laptopstoreapi.jthanh8144.click/',
 )
 
 urlpatterns = [

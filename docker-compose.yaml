@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   laptopstore:
-    build: 
+    build:
       dockerfile: Dockerfile
       context: .
       args:
